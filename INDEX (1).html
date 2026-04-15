@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordenamiento de Tarjetas — Accesibilidad en Telecomunicaciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: #2a2f42;
+    --accent: #4af0c4;
+    --accent2: #6c7bff;
+    --accent3: #ffd166;
+    --text: #e8eaf2;
+    --text-muted: #7880a0;
+    --cat-a: #4af0c4;
+    --cat-b: #6c7bff;
+    --cat-c: #ffd166;
+    --cat-d: #ff6b9d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(74,240,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,240,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+  }
+  .label-chip {
+    display: inline-block;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 10px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(24px, 5vw, 42px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  header h1 span { color: var(--accent); }
+  header p {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 620px;
+    line-height: 1.7;
+  }
+
+  /* ── Section title ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    margin-top: 48px;
+  }
+  .section-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--bg);
+    background: var(--accent);
+    padding: 3px 9px;
+    border-radius: 2px;
+  }
+  .section-number.b { background: var(--accent2); }
+  .section-number.c { background: var(--accent3); color: #1a1600; }
+  .section-number.d { background: var(--cat-d); }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    margin-bottom: 24px;
+    margin-left: 2px;
+    line-height: 1.6;
+  }
+
+  /* ── Sort Zone ── */
+  .sort-zone {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  @media (max-width: 700px) {
+    .sort-zone { grid-template-columns: 1fr; }
+  }
+
+  .category-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 14px;
+    min-height: 120px;
+  }
+  .category-col.highlight-a { border-color: rgba(74,240,196,0.4); }
+  .category-col.highlight-b { border-color: rgba(108,123,255,0.4); }
+  .category-col.highlight-c { border-color: rgba(255,209,102,0.4); }
+  .category-col.highlight-d { border-color: rgba(255,107,157,0.4); }
+
+  .col-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .col-label.a { color: var(--cat-a); }
+  .col-label.b { color: var(--cat-b); }
+  .col-label.c { color: var(--cat-c); }
+  .col-label.d { color: var(--cat-d); }
+
+  /* ── Cards ── */
+  .cards-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 20px;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    min-height: 80px;
+  }
+  .cards-pool.empty-hint::after {
+    content: 'Arrastra tarjetas aquí';
+    color: var(--text-muted);
+    font-size: 13px;
+    align-self: center;
+    margin: auto;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .drop-area {
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .drop-area.drag-over {
+    background: rgba(74,240,196,0.04);
+    border-radius: 6px;
+  }
+
+  .card {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    cursor: grab;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+    transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+    user-select: none;
+    max-width: 100%;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(74,240,196,0.12);
+    transform: translateY(-1px);
+  }
+  .card.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+  .card-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .card.placed {
+    display: flex;
+    width: 100%;
+  }
+  .card.placed .remove-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.1s;
+  }
+  .card.placed .remove-btn:hover { color: var(--cat-d); }
+
+  /* ── Ranking (section 1) ── */
+  .ranking-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-height: 52px;
+    transition: border-color 0.15s;
+  }
+  .rank-row.drag-over {
+    border-color: var(--accent);
+    background: rgba(74,240,196,0.05);
+  }
+  .rank-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    min-width: 26px;
+    color: var(--text-muted);
+  }
+  .rank-badge.filled { color: var(--accent); }
+  .rank-placeholder {
+    font-size: 13px;
+    color: var(--text-muted);
+    opacity: 0.4;
+    font-style: italic;
+  }
+  .rank-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  /* ── Instrucciones ── */
+  .instruction-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(74,240,196,0.06);
+    border: 1px solid rgba(74,240,196,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .instruction-bar .icon { color: var(--accent); font-size: 16px; }
+
+  /* ── Submit button ── */
+  .result-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    background: var(--accent);
+    color: #0d0f14;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    padding: 12px 24px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .result-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .result-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Thank you screen ── */
+  .thankyou-screen {
+    display: none;
+    margin-top: 48px;
+    text-align: center;
+    padding: 56px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .thankyou-screen.visible { display: block; }
+  .thankyou-icon {
+    font-size: 52px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .thankyou-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .thankyou-msg {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  .sending-indicator {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 16px;
+  }
+  .sending-indicator.visible { display: flex; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  /* Progress */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0 0;
+  }
+
+  .note-box {
+    background: rgba(108,123,255,0.08);
+    border-left: 3px solid var(--accent2);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 16px;
+  }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="label-chip">Investigación UX · Maestría en Diseño de Información</div>
+    <h1>Accesibilidad en interfaces<br>de <span>telecomunicaciones</span></h1>
+    <p>Ordenamiento de tarjetas cerrado (closed card sort) para usuarios sordos. Arrastra cada tarjeta a la categoría que consideres más adecuada.</p>
+  </header>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <!-- ══════════════════════════════
+       SECCIÓN 1 — RELEVANCIA
+  ══════════════════════════════ -->
+  <div class="section-header">
+    <span class="section-number">01</span>
+    <span class="section-title">Relevancia de los elementos de accesibilidad</span>
+  </div>
+  <p class="section-subtitle">Ordena los elementos de mayor a menor relevancia para un usuario sordo durante una transmisión en vivo o videollamada.</p>
+
+  <div class="instruction-bar">
+    <span class="icon">↕</span>
+    Arrastra las tarjetas hacia las posiciones de mayor importancia (1 = más importante).
+  </div>
+
+  <div class="ranking-zone" id="rank-zone">
+    <div class="rank-row" data-rank="1" ondragover="rankOver(event)" ondrop="rankDrop(event, 1)" ondragleave="rankLeave(event)">
+      <span class="rank-badge" id="rb-1">1</span>
+      <div class="rank-content" id="rc-1"><span class="rank-placeholder">Arrastra aquí el más importante</span></div>
+    </div>
+    <div class="rank-row" data-rank="2" ondragover="rankOver(event)" ondrop="rankDrop(event, 2)" ondragleave="rankLeave(event)">
+      <span class="rank-badge" id="rb-2">2</span>
+      <div class="rank-content" id="rc-2"><span class="rank-placeholder">Arrastra aquí</span></div>
+    </div>
+    <div class="rank-row" data-rank="3" ondragover="rankOver(event)" ondrop="rankDrop(event, 3)" ondragleave="rankLeave(event)">
+      <span class="rank-badge" id="rb-3">3</span>
+      <div class="rank-content" id="rc-3"><span class="rank-placeholder">Arrastra aquí</span></div>
+    </div>
+    <div class="rank-row" data-rank="4" ondragover="rankOver(event)" ondrop="rankDrop(event, 4)" ondragleave="rankLeave(event)">
+      <span class="rank-badge" id="rb-4">4</span>
+      <div class="rank-content" id="rc-4"><span class="rank-placeholder">Arrastra aquí</span></div>
+    </div>
+    <div class="rank-row" data-rank="5" ondragover="rankOver(event)" ondrop="rankDrop(event, 5)" ondragleave="rankLeave(event)">
+      <span class="rank-badge" id="rb-5">5</span>
+      <div class="rank-content" id="rc-5"><span class="rank-placeholder">Arrastra aquí</span></div>
+    </div>
+  </div>
+
+  <div class="cards-pool" id="pool-1" ondragover="poolOver(event)" ondrop="poolDrop(event, 'pool-1')" ondragleave="poolLeave(event)">
+    <div class="card" draggable="true" id="c-sub" ondragstart="dragStart(event, 'c-sub', 'pool-1')"><span class="card-icon">💬</span> Subtitulaje automático en tiempo real</div>
+    <div class="card" draggable="true" id="c-int" ondragstart="dragStart(event, 'c-int', 'pool-1')"><span class="card-icon">🤟</span> Ventana de intérprete de lengua de señas</div>
+    <div class="card" draggable="true" id="c-tra" ondragstart="dragStart(event, 'c-tra', 'pool-1')"><span class="card-icon">📝</span> Transcripción descargable post-evento</div>
+    <div class="card" draggable="true" id="c-alt" ondragstart="dragStart(event, 'c-alt', 'pool-1')"><span class="card-icon">🔔</span> Alertas visuales y vibración (sin audio)</div>
+    <div class="card" draggable="true" id="c-des" ondragstart="dragStart(event, 'c-des', 'pool-1')"><span class="card-icon">📖</span> Descripción de audio (AD) en texto</div>
+  </div>
+
+  <div class="note-box">
+    <strong style="color:var(--accent2)">Nota metodológica:</strong> En un card sort cerrado, tú defines las categorías. Esta sección captura la jerarquía de necesidades percibida por los participantes, útil para priorizar desarrollo de funcionalidades.
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════
+       SECCIÓN 2 — OPCIONES SUBTITULAJE
+  ══════════════════════════════ -->
+  <div class="section-header" style="margin-top:48px">
+    <span class="section-number b">02</span>
+    <span class="section-title">Opciones de personalización del subtitulaje</span>
+  </div>
+  <p class="section-subtitle">Clasifica cada opción de personalización según qué tan importante crees que es para mejorar la comprensión del mensaje.</p>
+
+  <div class="sort-zone" id="sort-2">
+    <div class="category-col highlight-a">
+      <div class="col-label a">ESENCIAL</div>
+      <div class="drop-area" id="drop-2a" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-2a')" ondragleave="dropLeave(event)"></div>
+    </div>
+    <div class="category-col highlight-b">
+      <div class="col-label b">ÚTIL</div>
+      <div class="drop-area" id="drop-2b" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-2b')" ondragleave="dropLeave(event)"></div>
+    </div>
+    <div class="category-col highlight-c">
+      <div class="col-label c">SECUNDARIO</div>
+      <div class="drop-area" id="drop-2c" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-2c')" ondragleave="dropLeave(event)"></div>
+    </div>
+  </div>
+
+  <div class="cards-pool" id="pool-2" ondragover="poolOver(event)" ondrop="poolDrop(event,'pool-2')" ondragleave="poolLeave(event)">
+    <div class="card" draggable="true" id="s1" ondragstart="dragStart(event,'s1','pool-2')"><span class="card-icon">🔡</span> Tamaño de fuente ajustable</div>
+    <div class="card" draggable="true" id="s2" ondragstart="dragStart(event,'s2','pool-2')"><span class="card-icon">🎨</span> Color y contraste del texto</div>
+    <div class="card" draggable="true" id="s3" ondragstart="dragStart(event,'s3','pool-2')"><span class="card-icon">📦</span> Fondo/caja detrás del subtítulo</div>
+    <div class="card" draggable="true" id="s4" ondragstart="dragStart(event,'s4','pool-2')"><span class="card-icon">📐</span> Posición en pantalla (arriba/abajo/lateral)</div>
+    <div class="card" draggable="true" id="s5" ondragstart="dragStart(event,'s5','pool-2')"><span class="card-icon">🔤</span> Tipo/familia tipográfica</div>
+    <div class="card" draggable="true" id="s6" ondragstart="dragStart(event,'s6','pool-2')"><span class="card-icon">👥</span> Identificación del hablante con color</div>
+    <div class="card" draggable="true" id="s7" ondragstart="dragStart(event,'s7','pool-2')"><span class="card-icon">⏱</span> Velocidad de aparición del texto</div>
+    <div class="card" draggable="true" id="s8" ondragstart="dragStart(event,'s8','pool-2')"><span class="card-icon">😮</span> Indicadores de tono (exclamación, ironía)</div>
+    <div class="card" draggable="true" id="s9" ondragstart="dragStart(event,'s9','pool-2')"><span class="card-icon">🎵</span> Etiquetas de sonidos no verbales (música, risa)</div>
+    <div class="card" draggable="true" id="s10" ondragstart="dragStart(event,'s10','pool-2')"><span class="card-icon">📏</span> Número de líneas visibles simultáneas</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════
+       SECCIÓN 3 — OPCIONES INTÉRPRETE
+  ══════════════════════════════ -->
+  <div class="section-header" style="margin-top:48px">
+    <span class="section-number c">03</span>
+    <span class="section-title">Opciones de personalización de la ventana de intérprete</span>
+  </div>
+  <p class="section-subtitle">Clasifica cada opción según su impacto en la comprensión del mensaje al usar una ventana de intérprete de lengua de señas.</p>
+
+  <div class="sort-zone" id="sort-3">
+    <div class="category-col highlight-a">
+      <div class="col-label a">ESENCIAL</div>
+      <div class="drop-area" id="drop-3a" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-3a')" ondragleave="dropLeave(event)"></div>
+    </div>
+    <div class="category-col highlight-b">
+      <div class="col-label b">ÚTIL</div>
+      <div class="drop-area" id="drop-3b" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-3b')" ondragleave="dropLeave(event)"></div>
+    </div>
+    <div class="category-col highlight-c">
+      <div class="col-label c">SECUNDARIO</div>
+      <div class="drop-area" id="drop-3c" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-3c')" ondragleave="dropLeave(event)"></div>
+    </div>
+  </div>
+
+  <div class="cards-pool" id="pool-3" ondragover="poolOver(event)" ondrop="poolDrop(event,'pool-3')" ondragleave="poolLeave(event)">
+    <div class="card" draggable="true" id="i1" ondragstart="dragStart(event,'i1','pool-3')"><span class="card-icon">📏</span> Tamaño de la ventana redimensionable</div>
+    <div class="card" draggable="true" id="i2" ondragstart="dragStart(event,'i2','pool-3')"><span class="card-icon">📌</span> Posición fija o flotante en pantalla</div>
+    <div class="card" draggable="true" id="i3" ondragstart="dragStart(event,'i3','pool-3')"><span class="card-icon">🔲</span> Fondo contrastante detrás del intérprete</div>
+    <div class="card" draggable="true" id="i4" ondragstart="dragStart(event,'i4','pool-3')"><span class="card-icon">🔦</span> Iluminación/contraste del video del intérprete</div>
+    <div class="card" draggable="true" id="i5" ondragstart="dragStart(event,'i5','pool-3')"><span class="card-icon">🎥</span> Calidad/resolución mínima garantizada</div>
+    <div class="card" draggable="true" id="i6" ondragstart="dragStart(event,'i6','pool-3')"><span class="card-icon">⬛</span> Silueta o modo de alto contraste</div>
+    <div class="card" draggable="true" id="i7" ondragstart="dragStart(event,'i7','pool-3')"><span class="card-icon">🔁</span> Sincronización con el audio principal</div>
+    <div class="card" draggable="true" id="i8" ondragstart="dragStart(event,'i8','pool-3')"><span class="card-icon">🖼</span> Modo picture-in-picture sobreimpuesto</div>
+    <div class="card" draggable="true" id="i9" ondragstart="dragStart(event,'i9','pool-3')"><span class="card-icon">🔡</span> Nombre/idioma de señas del intérprete visible</div>
+    <div class="card" draggable="true" id="i10" ondragstart="dragStart(event,'i10','pool-3')"><span class="card-icon">⏸</span> Pausa/rebobinado con intérprete sincronizado</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════
+       SECCIÓN 4 — INTERFAZ
+  ══════════════════════════════ -->
+  <div class="section-header" style="margin-top:48px">
+    <span class="section-number d">04</span>
+    <span class="section-title">Elementos que deberían presentarse en la interfaz</span>
+  </div>
+  <p class="section-subtitle">Clasifica los siguientes elementos según si deben estar siempre visibles, disponibles bajo demanda, o en configuración avanzada.</p>
+
+  <div class="sort-zone" id="sort-4">
+    <div class="category-col highlight-a">
+      <div class="col-label a">SIEMPRE VISIBLE</div>
+      <div class="drop-area" id="drop-4a" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-4a')" ondragleave="dropLeave(event)"></div>
+    </div>
+    <div class="category-col highlight-b">
+      <div class="col-label b">BAJO DEMANDA</div>
+      <div class="drop-area" id="drop-4b" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-4b')" ondragleave="dropLeave(event)"></div>
+    </div>
+    <div class="category-col highlight-c">
+      <div class="col-label c">CONFIG. AVANZADA</div>
+      <div class="drop-area" id="drop-4c" ondragover="dropOver(event)" ondrop="sortDrop(event,'drop-4c')" ondragleave="dropLeave(event)"></div>
+    </div>
+  </div>
+
+  <div class="cards-pool" id="pool-4" ondragover="poolOver(event)" ondrop="poolDrop(event,'pool-4')" ondragleave="poolLeave(event)">
+    <div class="card" draggable="true" id="u1" ondragstart="dragStart(event,'u1','pool-4')"><span class="card-icon">💬</span> Activar/desactivar subtítulos</div>
+    <div class="card" draggable="true" id="u2" ondragstart="dragStart(event,'u2','pool-4')"><span class="card-icon">🤟</span> Activar/desactivar intérprete</div>
+    <div class="card" draggable="true" id="u3" ondragstart="dragStart(event,'u3','pool-4')"><span class="card-icon">🔡</span> Ajuste rápido de tamaño de fuente</div>
+    <div class="card" draggable="true" id="u4" ondragstart="dragStart(event,'u4','pool-4')"><span class="card-icon">🎨</span> Cambio de perfil de color</div>
+    <div class="card" draggable="true" id="u5" ondragstart="dragStart(event,'u5','pool-4')"><span class="card-icon">📐</span> Reubicación de ventana de intérprete</div>
+    <div class="card" draggable="true" id="u6" ondragstart="dragStart(event,'u6','pool-4')"><span class="card-icon">📝</span> Acceso a transcripción en vivo</div>
+    <div class="card" draggable="true" id="u7" ondragstart="dragStart(event,'u7','pool-4')"><span class="card-icon">⚙️</span> Panel de preferencias de accesibilidad</div>
+    <div class="card" draggable="true" id="u8" ondragstart="dragStart(event,'u8','pool-4')"><span class="card-icon">🔔</span> Indicador visual de alarmas/alertas</div>
+    <div class="card" draggable="true" id="u9" ondragstart="dragStart(event,'u9','pool-4')"><span class="card-icon">💾</span> Guardar perfil de accesibilidad</div>
+    <div class="card" draggable="true" id="u10" ondragstart="dragStart(event,'u10','pool-4')"><span class="card-icon">🌐</span> Selección de idioma de señas</div>
+  </div>
+
+  <!-- ENVIAR -->
+  <div style="text-align:center; margin-top: 48px;" id="submit-area">
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; opacity:0.7;">
+      Al finalizar, tus respuestas se registrarán de forma anónima.
+    </p>
+    <button class="result-btn" id="submit-btn" onclick="submitResults()">
+      ✦ Enviar mis respuestas
+    </button>
+    <div class="sending-indicator" id="sending-indicator">
+      <div class="spinner"></div>
+      Registrando tus respuestas…
+    </div>
+  </div>
+
+  <!-- PANTALLA DE AGRADECIMIENTO (oculta hasta envío) -->
+  <div class="thankyou-screen" id="thankyou-screen">
+    <span class="thankyou-icon">🙌</span>
+    <div class="thankyou-title">¡Gracias por participar!</div>
+    <p class="thankyou-msg">
+      Tus respuestas han sido registradas de forma anónima y serán de gran ayuda para esta investigación sobre accesibilidad en interfaces de telecomunicaciones para usuarios sordos.
+    </p>
+  </div>
+
+</div>
+
+<script>
+  let draggedId = null;
+  let draggedOrigin = null;
+  const cardOrigin = {}; // track which pool each card came from
+
+  // ── Init
+  document.querySelectorAll('.card[draggable]').forEach(c => {
+    const pool = c.closest('.cards-pool');
+    if (pool) cardOrigin[c.id] = pool.id;
+  });
+
+  function dragStart(e, id, origin) {
+    draggedId = id;
+    draggedOrigin = origin;
+    setTimeout(() => document.getElementById(id)?.classList.add('dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function dragEnd(id) {
+    document.getElementById(id)?.classList.remove('dragging');
+  }
+
+  document.querySelectorAll('.card').forEach(c => {
+    c.addEventListener('dragend', () => dragEnd(c.id));
+  });
+
+  // ── Pool drop (return to pool)
+  function poolOver(e) { e.preventDefault(); e.currentTarget.style.borderColor = 'rgba(74,240,196,0.4)'; }
+  function poolLeave(e) { e.currentTarget.style.borderColor = ''; }
+  function poolDrop(e, poolId) {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = '';
+    if (!draggedId) return;
+    const card = document.getElementById(draggedId);
+    if (!card) return;
+    // Remove placed class & remove btn
+    card.classList.remove('placed');
+    const rb = card.querySelector('.remove-btn');
+    if (rb) rb.remove();
+    card.removeAttribute('style');
+    document.getElementById(poolId).appendChild(card);
+    card.setAttribute('ondragstart', `dragStart(event,'${draggedId}','${poolId}')`);
+    draggedId = null;
+    updateProgress();
+  }
+
+  // ── Rank zone
+  function rankOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+  function rankLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+  function rankDrop(e, rank) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    if (!draggedId) return;
+    const card = document.getElementById(draggedId);
+    if (!card) return;
+    const rc = document.getElementById(`rc-${rank}`);
+    const rb = document.getElementById(`rb-${rank}`);
+
+    // If already has a card, return it to pool
+    const existing = rc.querySelector('.card');
+    if (existing) {
+      const pool = document.getElementById(draggedOrigin || 'pool-1');
+      existing.classList.remove('placed');
+      const existRb = existing.querySelector('.remove-btn');
+      if (existRb) existRb.remove();
+      pool.appendChild(existing);
+    }
+
+    rc.innerHTML = '';
+    card.classList.add('placed');
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'remove-btn';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => {
+      const pool = document.getElementById(draggedOrigin || 'pool-1');
+      card.classList.remove('placed');
+      removeBtn.remove();
+      pool.appendChild(card);
+      rc.innerHTML = `<span class="rank-placeholder">Arrastra aquí</span>`;
+      rb.classList.remove('filled');
+      updateProgress();
+    };
+    card.appendChild(removeBtn);
+    rc.appendChild(card);
+    rb.classList.add('filled');
+    draggedId = null;
+    updateProgress();
+  }
+
+  // ── Sort drop zones
+  function dropOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+  function dropLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+  function sortDrop(e, dropId) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    if (!draggedId) return;
+    const card = document.getElementById(draggedId);
+    if (!card) return;
+    const dropEl = document.getElementById(dropId);
+
+    card.classList.add('placed');
+    // add remove btn if not present
+    if (!card.querySelector('.remove-btn')) {
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = '✕';
+      const origPool = draggedOrigin;
+      removeBtn.onclick = () => {
+        card.classList.remove('placed');
+        removeBtn.remove();
+        const pool = document.getElementById(origPool);
+        pool.appendChild(card);
+        card.setAttribute('ondragstart', `dragStart(event,'${card.id}','${origPool}')`);
+        updateProgress();
+      };
+      card.appendChild(removeBtn);
+    }
+    card.setAttribute('ondragstart', `dragStart(event,'${card.id}','${dropId}')`);
+    dropEl.appendChild(card);
+    draggedId = null;
+    updateProgress();
+  }
+
+  // ── Progress
+  function updateProgress() {
+    const total = document.querySelectorAll('.card[draggable]').length;
+    const inPools = document.querySelectorAll('.cards-pool .card').length;
+    const placed = total - inPools;
+    const pct = Math.round((placed / total) * 100);
+    document.getElementById('progress').style.width = pct + '%';
+  }
+
+  // ── Collect all results silently
+  function collectData() {
+    const ranking = [];
+    for (let i = 1; i <= 5; i++) {
+      const rc = document.getElementById(`rc-${i}`);
+      const card = rc?.querySelector('.card');
+      ranking.push(card ? card.innerText.replace('✕','').trim() : '');
+    }
+
+    function getZone(id) {
+      return [...(document.getElementById(id)?.querySelectorAll('.card') || [])]
+        .map(c => c.innerText.replace('✕','').trim());
+    }
+
+    return {
+      ranking,
+      subtitulos: {
+        esencial:   getZone('drop-2a'),
+        util:       getZone('drop-2b'),
+        secundario: getZone('drop-2c'),
+      },
+      interpretes: {
+        esencial:   getZone('drop-3a'),
+        util:       getZone('drop-3b'),
+        secundario: getZone('drop-3c'),
+      },
+      interfaz: {
+        visible:  getZone('drop-4a'),
+        demanda:  getZone('drop-4b'),
+        avanzada: getZone('drop-4c'),
+      },
+    };
+  }
+
+  // ── Submit via imagen invisible — funciona desde cualquier dispositivo sin CORS
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyWoGT3UhXwbS3APsQB1ubjeY96wKSccDG_mNnNAAwme582Gq-dYBcH4O_GwMaNkHhq3Q/exec';
+
+  async function submitResults() {
+    const btn = document.getElementById('submit-btn');
+    const indicator = document.getElementById('sending-indicator');
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    indicator.classList.add('visible');
+
+    const data = collectData();
+
+    // Aplanar datos como parámetros URL (GET) — Apps Script los recibe en doGet/doPost
+    const params = new URLSearchParams({
+      ranking:        data.ranking.join(' | '),
+      sub_esencial:   data.subtitulos.esencial.join(' | '),
+      sub_util:       data.subtitulos.util.join(' | '),
+      sub_secundario: data.subtitulos.secundario.join(' | '),
+      int_esencial:   data.interpretes.esencial.join(' | '),
+      int_util:       data.interpretes.util.join(' | '),
+      int_secundario: data.interpretes.secundario.join(' | '),
+      ui_visible:     data.interfaz.visible.join(' | '),
+      ui_demanda:     data.interfaz.demanda.join(' | '),
+      ui_avanzada:    data.interfaz.avanzada.join(' | '),
+    });
+
+    // Envío via imagen — no tiene restricciones CORS, funciona en todos los navegadores
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = img.onerror = () => resolve();
+      img.src = `${SHEET_URL}?${params.toString()}`;
+      setTimeout(resolve, 4000); // máximo 4s de espera
+    });
+
+    // Mostrar pantalla de agradecimiento
+    document.getElementById('submit-area').style.display = 'none';
+    indicator.classList.remove('visible');
+    document.getElementById('thankyou-screen').classList.add('visible');
+    document.getElementById('thankyou-screen').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>
+</body>
+</html>
